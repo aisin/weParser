@@ -1,6 +1,6 @@
-weParser - 微信小程序富文本解析插件
+# weParser - 微信小程序富文本解析插件
 
-# 使用方法
+## 使用方法
 
 * 将 weParser 组件完整引入小程序项目
 
@@ -41,3 +41,14 @@ let data = WeParser('html', data.content);
 /* 在 app.wxss 中引入默认的样式文件 */
 @import "/weParser/weparser.wxss";
 ```
+
+当然，有时需要处理的数据不是单一的对象，而是一个数组里的数据，此时需要遍历并处理。
+
+```
+let data = res.map((item, index, array) => {
+  item.content = WeParser('html', item.content);
+  return item;
+});
+```
+
+这样将 `res` 中每个对象的 `content` 属性使用 weParser 单独处理，再返回数据即可。
