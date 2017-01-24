@@ -21,149 +21,149 @@ var special = makeMap("script,style");
 
 
 function q(v) {
-	return '"' + v + '"';
+  return '"' + v + '"';
 }
 const DEBUG = false;
 var debug = DEBUG ? console.log.bind(console) : function () { };
 function removeDOCTYPE(html) {
-	return html
-		.replace(/<\?xml.*\?>\n/, '')
-		.replace(/<!doctype.*\>\n/, '')
-		.replace(/<!DOCTYPE.*\>\n/, '');
+  return html
+    .replace(/<\?xml.*\?>\n/, '')
+    .replace(/<!doctype.*\>\n/, '')
+    .replace(/<!DOCTYPE.*\>\n/, '');
 }
 
 function html2json(html) {
-	html = removeDOCTYPE(html);
-	var bufArray = [];
-	var results = {
-		node: 'root',
-		child: [],
-	};
-	HTMLParser(html, {
-		start: function (tag, attrs, unary) {
+  html = removeDOCTYPE(html);
+  var bufArray = [];
+  var results = {
+    node: 'root',
+    child: [],
+  };
+  HTMLParser(html, {
+    start: function (tag, attrs, unary) {
 
-			// node for this element
-			var node = {
-				node: 'element',
-				tag: tag,
-			};
+      // node for this element
+      var node = {
+        node: 'element',
+        tag: tag,
+      };
 
-			if (block[tag]) {
-				node.tagType = "block";
-			} else if (inline[tag]) {
-				node.tagType = "inline";
-			} else if (closeSelf[tag]) {
-				node.tagType = "closeSelf";
-			}
+      if (block[tag]) {
+        node.tagType = "block";
+      } else if (inline[tag]) {
+        node.tagType = "inline";
+      } else if (closeSelf[tag]) {
+        node.tagType = "closeSelf";
+      }
 
-			if (attrs.length !== 0) {
-				node.attr = attrs.reduce(function (pre, attr) {
-					var name = attr.name;
-					var value = attr.value;
+      if (attrs.length !== 0) {
+        node.attr = attrs.reduce(function (pre, attr) {
+          var name = attr.name;
+          var value = attr.value;
 
-					if (name == 'class') {
-						console.dir(value);
-						//  value = value.join("")
-						node.classStr = value;
-					}
-					// has multi attibutes
-					// make it array of attribute
-					if (name == 'style') {
-						console.dir(value);
-						//  value = value.join("")
-						node.styleStr = value;
-					}
+          if (name == 'class') {
+            console.dir(value);
+            //  value = value.join("")
+            node.classStr = value;
+          }
+          // has multi attibutes
+          // make it array of attribute
+          if (name == 'style') {
+            console.dir(value);
+            //  value = value.join("")
+            node.styleStr = value;
+          }
 
-					// has multi attibutes
-					// make it array of attribute
-					if (value.match(/ /)) {
-						value = value.split(' ');
-					}
+          // has multi attibutes
+          // make it array of attribute
+          if (value.match(/ /)) {
+            value = value.split(' ');
+          }
 
-					// if attr already exists
-					// merge it
-					if (pre[name]) {
-						if (Array.isArray(pre[name])) {
-							// already array, push to last
-							pre[name].push(value);
-						} else {
-							// single value, make it array
-							pre[name] = [pre[name], value];
-						}
-					} else {
-						// not exist, put it
-						pre[name] = value;
-					}
+          // if attr already exists
+          // merge it
+          if (pre[name]) {
+            if (Array.isArray(pre[name])) {
+              // already array, push to last
+              pre[name].push(value);
+            } else {
+              // single value, make it array
+              pre[name] = [pre[name], value];
+            }
+          } else {
+            // not exist, put it
+            pre[name] = value;
+          }
 
-					return pre;
-				}, {});
-			}
-			if (unary) {
-				// if this tag dosen't have end tag
-				// like <img src="hoge.png"/>
-				// add to parents
-				var parent = bufArray[0] || results;
-				if (parent.child === undefined) {
-					parent.child = [];
-				}
-				parent.child.push(node);
-			} else {
-				bufArray.unshift(node);
-			}
-		},
-		end: function (tag) {
+          return pre;
+        }, {});
+      }
+      if (unary) {
+        // if this tag dosen't have end tag
+        // like <img src="hoge.png"/>
+        // add to parents
+        var parent = bufArray[0] || results;
+        if (parent.child === undefined) {
+          parent.child = [];
+        }
+        parent.child.push(node);
+      } else {
+        bufArray.unshift(node);
+      }
+    },
+    end: function (tag) {
 
-			// merge into parent tag
-			var node = bufArray.shift();
-			if (node.tag !== tag) console.error('invalid state: mismatch end tag');
+      // merge into parent tag
+      var node = bufArray.shift();
+      if (node.tag !== tag) console.error('invalid state: mismatch end tag');
 
-			if (bufArray.length === 0) {
-				results.child.push(node);
-			} else {
-				var parent = bufArray[0];
-				if (parent.child === undefined) {
-					parent.child = [];
-				}
-				parent.child.push(node);
-			}
-		},
-		chars: function (text) {
+      if (bufArray.length === 0) {
+        results.child.push(node);
+      } else {
+        var parent = bufArray[0];
+        if (parent.child === undefined) {
+          parent.child = [];
+        }
+        parent.child.push(node);
+      }
+    },
+    chars: function (text) {
 
-			var node = {
-				node: 'text',
-				text: text,
-			};
-			if (bufArray.length === 0) {
-				results.child.push(node);
-			} else {
-				var parent = bufArray[0];
-				if (parent.child === undefined) {
-					parent.child = [];
-				}
-				parent.child.push(node);
-			}
-		},
-		comment: function (text) {
-			debug(text);
-			var node = {
-				node: 'comment',
-				text: text,
-			};
-			var parent = bufArray[0];
-			if (parent.child === undefined) {
-				parent.child = [];
-			}
-			parent.child.push(node);
-		},
-	});
-	return results;
+      var node = {
+        node: 'text',
+        text: text,
+      };
+      if (bufArray.length === 0) {
+        results.child.push(node);
+      } else {
+        var parent = bufArray[0];
+        if (parent.child === undefined) {
+          parent.child = [];
+        }
+        parent.child.push(node);
+      }
+    },
+    comment: function (text) {
+      debug(text);
+      var node = {
+        node: 'comment',
+        text: text,
+      };
+      var parent = bufArray[0];
+      if (parent.child === undefined) {
+        parent.child = [];
+      }
+      parent.child.push(node);
+    },
+  });
+  return results;
 };
 
 function makeMap(str) {
-	var obj = {}, items = str.split(",");
-	for (var i = 0; i < items.length; i++)
-		obj[items[i]] = true;
-	return obj;
+  var obj = {}, items = str.split(",");
+  for (var i = 0; i < items.length; i++)
+    obj[items[i]] = true;
+  return obj;
 }
 
 module.exports = html2json;
