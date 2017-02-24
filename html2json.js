@@ -19,12 +19,13 @@ var fillAttrs = makeMap("checked,compact,declare,defer,disabled,ismap,multiple,n
 // Special Elements (can contain anything)
 var special = makeMap("script,style");
 
-
 function q(v) {
   return '"' + v + '"';
 }
+
 const DEBUG = false;
 var debug = DEBUG ? console.log.bind(console) : function () { };
+
 function removeDOCTYPE(html) {
   return html
     .replace(/<\?xml.*\?>\n/, '')
@@ -41,7 +42,6 @@ function html2json(html) {
   };
   HTMLParser(html, {
     start: function (tag, attrs, unary) {
-
       // node for this element
       var node = {
         node: 'element',
@@ -62,15 +62,15 @@ function html2json(html) {
           var value = attr.value;
 
           if (name == 'class') {
-            console.dir(value);
-            //  value = value.join("")
+            // console.dir(value);
+            // value = value.join("")
             node.classStr = value;
           }
           // has multi attibutes
           // make it array of attribute
           if (name == 'style') {
-            console.dir(value);
-            //  value = value.join("")
+            // console.dir(value);
+            // value = value.join("")
             node.styleStr = value;
           }
 
@@ -112,7 +112,6 @@ function html2json(html) {
       }
     },
     end: function (tag) {
-
       // merge into parent tag
       var node = bufArray.shift();
       if (node.tag !== tag) console.error('invalid state: mismatch end tag');
@@ -128,7 +127,6 @@ function html2json(html) {
       }
     },
     chars: function (text) {
-
       var node = {
         node: 'text',
         text: text,

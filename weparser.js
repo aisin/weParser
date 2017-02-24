@@ -1,7 +1,7 @@
 var HtmlToJson = require('html2json.js');
 var htmlDiscode = require('htmldiscode.js');
 
-//type html'
+//type 'html'
 
 function weParser(type, html) {
   var weParserData = [];
@@ -10,7 +10,8 @@ function weParser(type, html) {
     var json = HtmlToJson(html);
     weParserData = json.child;
   }
-
+  
   return weParserData;
 }
+
 module.exports = weParser;
